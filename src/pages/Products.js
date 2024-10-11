@@ -28,15 +28,30 @@ const Products = () => {
     const handleSubmit = async (e) => {
         e.preventDefault();
         try {
-            const res = await api.post('/products', { title, price, description, images, categoryId });
-            alert(res.data.message);
-            setTitle('');
-            setPrice('');
-            setDescription('');
-            setImages('');
-            setCategoryId('');
+            const res = await api.post('/products', { 
+                title, 
+                price, 
+                description, 
+                images: images.split(',').map(img => img.trim()), // Convert images to an array
+                category_id: parseInt(categoryId)  // Convert categoryId to integer
+            });
+
+            if (res.status === 201) {
+                alert(res.data.message);  // Product created successfully
+                setTitle('');
+                setPrice('');
+                setDescription('');
+                setImages('');
+                setCategoryId('');
+                fetchProducts(); // Refresh the product list
+            } else {
+                console.error('Unexpected response:', res);
+                alert('Unexpected response from the server.');
+            }
+
         } catch (err) {
-            console.error(err);
+            console.error('Error submitting the form:', err.response);  // Log the error response
+            alert('Failed to add product. Please check the form data.');
         }
     };
 
@@ -127,15 +142,18 @@ const Products = () => {
                                         src={product.images[0]}
                                         alt={product.title}
                                         style={{ width: '100%', height: '150px', objectFit: 'cover' }}
-                                        onError={(e) => { e.target.src = '/default-image.jpg'; }}
+                                        onError={(e) => { e.target.src = '/default-image.jpg'; }} // Fallback image
                                     />
                                 ) : (
                                     <img
-                                        src="/default-image.jpg"
-                                        alt="No Image Available"
+                                        src='/path/to/no-image-available.jpg'
+                                        alt='No image available'
                                         style={{ width: '100%', height: '150px', objectFit: 'cover' }}
                                     />
                                 )}
+                                <Typography variant="body2" paragraph>
+                                    {product.description}
+                                </Typography>
                             </CardContent>
                         </Card>
                     </Grid>
