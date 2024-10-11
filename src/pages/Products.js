@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import api from '../services/api';
+import api from '../services/api'; // Ensure this points to your Axios instance or API service
 import { Card, CardContent, Typography, Grid, Box, TextField, Button } from '@mui/material';
 
 const Products = () => {
@@ -20,35 +20,23 @@ const Products = () => {
             const res = await api.get('/products');
             setProducts(res.data);
         } catch (err) {
-            console.error(err);
+            console.error('Failed to fetch products:', err);
         }
     };
 
     // Handle form submission for adding a new product
     const handleSubmit = async (e) => {
         e.preventDefault();
-
-        const newProduct = {
-            title,
-            price: parseFloat(price),
-            description,
-            images: images.split(',').map(image => image.trim()), // Convert comma-separated images to an array
-            category_id: parseInt(categoryId)
-        };
-
         try {
-            await api.post('/products', newProduct);
-            console.log('Product added:', newProduct);
-            // Clear form fields
+            const res = await api.post('/products', { title, price, description, images, categoryId });
+            alert(res.data.message);
             setTitle('');
             setPrice('');
             setDescription('');
             setImages('');
             setCategoryId('');
-            // Refresh the product list
-            fetchProducts();
-        } catch (error) {
-            console.error('Failed to add product:', error);
+        } catch (err) {
+            console.error(err);
         }
     };
 
@@ -128,16 +116,26 @@ const Products = () => {
                             <CardContent>
                                 <Typography variant="h6">{product.title}</Typography>
                                 <Typography variant="body2" color="textSecondary">
-                                    {product.category.name}
+                                    {product.category ? product.category.name : 'Uncategorized'}
                                 </Typography>
                                 <Typography variant="body1">
                                     Rp.{product.price}
                                 </Typography>
-                                <img
-                                    src={product.images[0]}
-                                    alt={product.title}
-                                    style={{ width: '100%', height: '150px', objectFit: 'cover' }}
-                                />
+                                {/* Safeguard for images */}
+                                {product.images && product.images.length > 0 ? (
+                                    <img
+                                        src={product.images[0]}
+                                        alt={product.title}
+                                        style={{ width: '100%', height: '150px', objectFit: 'cover' }}
+                                        onError={(e) => { e.target.src = '/default-image.jpg'; }}
+                                    />
+                                ) : (
+                                    <img
+                                        src="/default-image.jpg"
+                                        alt="No Image Available"
+                                        style={{ width: '100%', height: '150px', objectFit: 'cover' }}
+                                    />
+                                )}
                             </CardContent>
                         </Card>
                     </Grid>
